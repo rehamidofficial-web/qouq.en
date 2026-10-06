@@ -27,6 +27,8 @@ jobs:
 
   backend:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://neondb_owner:npg_2E1qBgnXlxUT@ep-curly-shadow-b3wgzmov.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
     defaults:
       run:
         working-directory: backend
@@ -38,6 +40,7 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
+      - run: npx prisma generate
       - run: npm run lint
       - run: npm test
       - run: npm run build
