@@ -83,3 +83,136 @@ model PasswordResetToken {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+enum PartOfSpeech {
+  NOUN
+  VERB
+  ADJECTIVE
+  ADVERB
+  PRONOUN
+  PREPOSITION
+  CONJUNCTION
+  INTERJECTION
+  DETERMINER
+  OTHER
+}
+
+enum RelationType {
+  SYNONYM
+  ANTONYM
+}
+
+enum ContentStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  name        String
+  description String?
+  sortOrder   Int      @default(0)
+  targetCount Int      @default(500)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sentences Sentence[]
+}
+
+model DictionaryEntry {
+  id           String        @id @default(uuid())
+  headword     String        @unique
+  phoneticIpa  String?
+  phoneticEasy String?
+  level        Level?
+  forms        Json?
+  source       String?
+  license      String?
+  status       ContentStatus @default(PUBLISHED)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  senses      DictionarySense[]
+  relations   WordRelation[]    @relation("EntryRelations")
+  relatedFrom WordRelation[]    @relation("RelatedToEntries")
+}
+
+model DictionarySense {
+  id           String       @id @default(uuid())
+  entryId      String
+  partOfSpeech PartOfSpeech
+  meaningId    String
+  definitionEn String?
+  sortOrder    Int          @default(0)
+
+  entry    DictionaryEntry     @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  examples DictionaryExample[]
+
+  @@index([entryId])
+}
+
+model DictionaryExample {
+  id        String @id @default(uuid())
+  senseId   String
+  textEn    String
+  textId    String
+  sortOrder Int    @default(0)
+
+  sense DictionarySense @relation(fields: [senseId], references: [id], onDelete: Cascade)
+
+  @@index([senseId])
+}
+
+model WordRelation {
+  id             String       @id @default(uuid())
+  entryId        String
+  relatedEntryId String
+  type           RelationType
+
+  entry        DictionaryEntry @relation("EntryRelations", fields: [entryId], references: [id], onDelete: Cascade)
+  relatedEntry DictionaryEntry @relation("RelatedToEntries", fields: [relatedEntryId], references: [id], onDelete: Cascade)
+
+  @@unique([entryId, relatedEntryId, type])
+  @@index([relatedEntryId])
+}
+
+model Sentence {
+  id           String        @id @default(uuid())
+  categoryId   String
+  textEn       String
+  textId       String
+  phoneticIpa  String?
+  phoneticEasy String?
+  level        Level         @default(A1)
+  notes        String?
+  source       String?
+  status       ContentStatus @default(DRAFT)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  category Category      @relation(fields: [categoryId], references: [id])
+  tags     SentenceTag[]
+
+  @@unique([categoryId, textEn])
+  @@index([categoryId, level])
+  @@index([status])
+}
+
+model Tag {
+  id   String @id @default(uuid())
+  name String @unique
+
+  sentences SentenceTag[]
+}
+
+model SentenceTag {
+  sentenceId String
+  tagId      String
+
+  sentence Sentence @relation(fields: [sentenceId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([sentenceId, tagId])
+}
