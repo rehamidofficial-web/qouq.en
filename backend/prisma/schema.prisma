@@ -154,11 +154,12 @@ model DictionarySense {
 }
 
 model DictionaryExample {
-  id        String @id @default(uuid())
+  id        String  @id @default(uuid())
   senseId   String
   textEn    String
   textId    String
-  sortOrder Int    @default(0)
+  sortOrder Int     @default(0)
+  source    String?
 
   sense DictionarySense @relation(fields: [senseId], references: [id], onDelete: Cascade)
 
