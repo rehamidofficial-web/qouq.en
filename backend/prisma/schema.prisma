@@ -1,7 +1,6 @@
 generator client {
-  provider     = "prisma-client"
-  output       = "../src/generated/prisma"
-  
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -28,12 +27,13 @@ enum VoiceGender {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  practiceSessions PracticeSession[]
+  id               String            @id @default(uuid())
+  email            String            @unique
+  passwordHash     String
+  name             String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   profile     UserProfile?
   roles       UserRole[]
@@ -109,14 +109,15 @@ enum ContentStatus {
 }
 
 model Category {
-  id          String   @id @default(uuid())
-  slug        String   @unique
-  name        String
-  description String?
-  sortOrder   Int      @default(0)
-  targetCount Int      @default(500)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  practiceSessions PracticeSession[]
+  id               String            @id @default(uuid())
+  slug             String            @unique
+  name             String
+  description      String?
+  sortOrder        Int               @default(0)
+  targetCount      Int               @default(500)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   sentences Sentence[]
 }
@@ -182,18 +183,19 @@ model WordRelation {
 }
 
 model Sentence {
-  id           String        @id @default(uuid())
-  categoryId   String
-  textEn       String
-  textId       String
-  phoneticIpa  String?
-  phoneticEasy String?
-  level        Level         @default(A1)
-  notes        String?
-  source       String?
-  status       ContentStatus @default(DRAFT)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  practiceAttempts PracticeAttempt[]
+  id               String            @id @default(uuid())
+  categoryId       String
+  textEn           String
+  textId           String
+  phoneticIpa      String?
+  phoneticEasy     String?
+  level            Level             @default(A1)
+  notes            String?
+  source           String?
+  status           ContentStatus     @default(DRAFT)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   category Category      @relation(fields: [categoryId], references: [id])
   tags     SentenceTag[]
@@ -218,4 +220,44 @@ model SentenceTag {
   tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([sentenceId, tagId])
+}
+
+enum SessionMode {
+  PRACTICE
+  TEST
+}
+
+model PracticeSession {
+  id         String      @id @default(uuid())
+  userId     String
+  categoryId String?
+  mode       SessionMode @default(PRACTICE)
+  startedAt  DateTime    @default(now())
+  finishedAt DateTime?
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  attempts PracticeAttempt[]
+
+  @@index([userId, startedAt])
+}
+
+model PracticeAttempt {
+  id              String   @id @default(uuid())
+  sessionId       String
+  sentenceId      String
+  spokenText      String
+  wordScore       Float
+  orderScore      Float
+  confidenceScore Float?
+  finalScore      Int
+  label           String
+  details         Json
+  createdAt       DateTime @default(now())
+
+  session  PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sentence Sentence        @relation(fields: [sentenceId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([sentenceId])
 }
