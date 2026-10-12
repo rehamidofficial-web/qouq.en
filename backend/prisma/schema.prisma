@@ -27,6 +27,7 @@ enum VoiceGender {
 }
 
 model User {
+  grammarAttempts  GrammarAttempt[]
   practiceSessions PracticeSession[]
   id               String            @id @default(uuid())
   email            String            @unique
@@ -260,4 +261,86 @@ model PracticeAttempt {
 
   @@index([sessionId])
   @@index([sentenceId])
+}
+
+enum GrammarQuestionType {
+  MULTIPLE_CHOICE
+  FILL_BLANK
+}
+
+model GrammarTopic {
+  id          String        @id @default(uuid())
+  slug        String        @unique
+  title       String
+  description String?
+  level       Level
+  status      ContentStatus @default(DRAFT)
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  lessons   GrammarLesson[]
+  questions GrammarQuestion[]
+  attempts  GrammarAttempt[]
+
+  @@index([status, level])
+}
+
+model GrammarLesson {
+  id        String  @id @default(uuid())
+  topicId   String
+  title     String
+  summary   String
+  examples  String?
+  sortOrder Int     @default(0)
+
+  topic GrammarTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@index([topicId])
+}
+
+model GrammarQuestion {
+  id              String              @id @default(uuid())
+  topicId         String
+  type            GrammarQuestionType
+  prompt          String
+  explanation     String?
+  level           Level
+  status          ContentStatus       @default(DRAFT)
+  sortOrder       Int                 @default(0)
+  acceptedAnswers String[]
+
+  topic   GrammarTopic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  options GrammarOption[]
+
+  @@index([topicId, status])
+}
+
+model GrammarOption {
+  id         String  @id @default(uuid())
+  questionId String
+  text       String
+  isCorrect  Boolean @default(false)
+  sortOrder  Int     @default(0)
+
+  question GrammarQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+model GrammarAttempt {
+  id             String   @id @default(uuid())
+  userId         String
+  topicId        String
+  score          Int
+  correctCount   Int
+  totalQuestions Int
+  answers        Json
+  createdAt      DateTime @default(now())
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic GrammarTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([topicId])
 }
