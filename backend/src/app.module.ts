@@ -1,3 +1,4 @@
+import { HealthModule } from './health/health.module';
 import { GrammarModule } from './grammar/grammar.module';
 import { PracticeModule } from './practice/practice.module';
 import { CategoriesModule } from './categories/categories.module';
@@ -10,7 +11,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { DictionaryModule } from './dictionary/dictionary.module';
 
 @Module({
-  imports: [GrammarModule, PracticeModule, CategoriesModule, ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, DictionaryModule],
+  imports: [HealthModule, GrammarModule, PracticeModule, CategoriesModule, ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, DictionaryModule],
   controllers: [AppController],
   providers: [AppService],
 })
