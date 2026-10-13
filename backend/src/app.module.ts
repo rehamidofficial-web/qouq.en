@@ -11,7 +11,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { DictionaryModule } from './dictionary/dictionary.module';
 
 @Module({
-  imports: [HealthModule, GrammarModule, PracticeModule, CategoriesModule, ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, DictionaryModule],
+  imports: [HealthModule, HealthModule, GrammarModule, PracticeModule, CategoriesModule, ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, DictionaryModule],
   controllers: [AppController],
   providers: [AppService],
 })
