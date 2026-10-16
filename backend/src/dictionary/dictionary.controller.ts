@@ -16,8 +16,10 @@ export class DictionaryController {
   autocomplete(
     @Query('q') q = '',
     @Query('limit', new DefaultValuePipe(8), ParseIntPipe) limit: number,
+    @Query('pos') pos?: string,
+    @Query('level') level?: string,
   ) {
-    return this.dictionary.autocomplete(q, limit);
+    return this.dictionary.autocomplete(q, limit, pos, level);
   }
 
   @Get('search')
@@ -25,8 +27,10 @@ export class DictionaryController {
     @Query('q') q = '',
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Query('pos') pos?: string,
+    @Query('level') level?: string,
   ) {
-    return this.dictionary.search(q, page, limit);
+    return this.dictionary.search(q, page, limit, pos, level);
   }
 
   @Get('entries/:id')
