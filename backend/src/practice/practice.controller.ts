@@ -1,9 +1,12 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Get,
   Param,
+  ParseIntPipe,
   Post,
+  Query,
   Req,
   UnauthorizedException,
   UseGuards,
@@ -53,6 +56,34 @@ export class PracticeController {
   @Post('sessions/:id/finish')
   finish(@Req() req: AuthedRequest, @Param('id') id: string) {
     return this.practice.finishSession(userIdOf(req), id);
+  }
+
+  // Kemajuan per kategori: berapa kalimat yang sudah dilatih.
+  @UseGuards(AuthGuard)
+  @Get('progress')
+  progress(@Req() req: AuthedRequest) {
+    return this.practice.progressByCategory(userIdOf(req));
+  }
+
+  // Daftar kalimat satu kategori + skor terbaik pengguna (status: all, todo, done).
+  @UseGuards(AuthGuard)
+  @Get('progress/:idOrSlug')
+  progressList(
+    @Req() req: AuthedRequest,
+    @Param('idOrSlug') idOrSlug: string,
+    @Query('status') status: string | undefined,
+    @Query('level') level: string | undefined,
+    @Query('q') q: string | undefined,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ) {
+    return this.practice.sentencesWithProgress(userIdOf(req), idOrSlug, {
+      status,
+      level,
+      q,
+      page,
+      limit,
+    });
   }
 
   @UseGuards(AuthGuard)
