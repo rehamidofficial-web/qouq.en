@@ -33,29 +33,28 @@ function PlayIcon({ playing }: { playing: boolean }) {
 // Pemutar sesuai desain "Pemutar Pelafalan": suara wanita/pria, aksen, kecepatan, putar lambat.
 export default function AudioPlayer({ text }: { text: string }) {
   const { supported, playing, speak, stop, note, voiceName } = useSpeech();
-  const [gender, setGender] = useState<Gender>("FEMALE");
-  const [accent, setAccent] = useState<Accent>("US");
-  const [speed, setSpeed] = useState(1);
-  const [loaded, setLoaded] = useState(false);
+  // Pilihan terakhir dibaca sekali saat komponen dibuat (hanya kenyamanan; kalau penyimpanan diblokir, tetap jalan).
+  const [gender, setGender] = useState<Gender>(() => {
+    const g = readSaved().gender;
+    return g === "FEMALE" || g === "MALE" ? g : "FEMALE";
+  });
+  const [accent, setAccent] = useState<Accent>(() => {
+    const a = readSaved().accent;
+    return a === "US" || a === "UK" || a === "AU" ? a : "US";
+  });
+  const [speed, setSpeed] = useState(() => {
+    const v = readSaved().speed;
+    return typeof v === "number" && v >= 0.5 && v <= 1.5 ? v : 1;
+  });
   const [slow, setSlow] = useState(false); // true saat yang sedang diputar adalah mode lambat
 
-  // Ingat pilihan terakhir (hanya kenyamanan; kalau penyimpanan diblokir, tetap jalan).
   useEffect(() => {
-    const s = readSaved();
-    if (s.gender === "FEMALE" || s.gender === "MALE") setGender(s.gender);
-    if (s.accent === "US" || s.accent === "UK" || s.accent === "AU") setAccent(s.accent);
-    if (typeof s.speed === "number" && s.speed >= 0.5 && s.speed <= 1.5) setSpeed(s.speed);
-    setLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (!loaded) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ gender, accent, speed } satisfies Saved));
     } catch {
       /* diabaikan */
     }
-  }, [gender, accent, speed, loaded]);
+  }, [gender, accent, speed]);
 
   // Ganti kalimat = hentikan suara yang sedang jalan.
   useEffect(() => stop, [text, stop]);

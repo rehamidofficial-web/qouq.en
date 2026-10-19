@@ -1,31 +1,49 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ACCENT_LANG, pickVoice, reasonNote, type Accent, type Gender, type Pick } from "@/lib/speech";
 
 export type SpeakOptions = { accent: Accent; gender: Gender; rate: number };
 
+const noopSubscribe = () => () => {};
+const detectSynth = () => typeof window !== "undefined" && "speechSynthesis" in window;
+
+// Apakah browser ini punya suara bawaan? (aman dipakai di server dan tidak memakai setState di effect)
+export function useSpeechSupported(): boolean {
+  return useSyncExternalStore(noopSubscribe, detectSynth, () => true);
+}
+
+// Daftar suara disimpan di sini supaya hasilnya "tetap" (tidak berganti objek setiap dibaca).
+let voicesCache: SpeechSynthesisVoice[] = [];
+
+function subscribeVoices(onChange: () => void) {
+  if (!detectSynth()) return () => {};
+  const synth = window.speechSynthesis;
+  const refresh = () => {
+    voicesCache = synth.getVoices();
+    onChange();
+  };
+  // Browser kadang baru memuat daftar suara setelah halaman terbuka.
+  voicesCache = synth.getVoices();
+  synth.addEventListener("voiceschanged", refresh);
+  return () => synth.removeEventListener("voiceschanged", refresh);
+}
+const getVoicesSnapshot = () => voicesCache;
+const getVoicesServer = (): SpeechSynthesisVoice[] => [];
+
 // Pemutar suara memakai fitur bawaan browser (Web Speech API), tanpa file audio dan tanpa biaya.
 export function useSpeech() {
-  const [supported, setSupported] = useState(true);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const supported = useSpeechSupported();
+  const voices = useSyncExternalStore(subscribeVoices, getVoicesSnapshot, getVoicesServer);
   const [playing, setPlaying] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [voiceName, setVoiceName] = useState<string | null>(null);
   const current = useRef<SpeechSynthesisUtterance | null>(null);
 
+  // Pindah halaman = hentikan suara yang masih berjalan.
   useEffect(() => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      setSupported(false);
-      return;
-    }
-    const synth = window.speechSynthesis;
-    const load = () => setVoices(synth.getVoices());
-    load();
-    synth.addEventListener("voiceschanged", load);
     return () => {
-      synth.removeEventListener("voiceschanged", load);
-      synth.cancel();
+      if (detectSynth()) window.speechSynthesis.cancel();
     };
   }, []);
 

@@ -1,6 +1,8 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useSpeechSupported } from "@/lib/useSpeech";
+import { EjaanKata } from "@/components/ejaan/Ejaan";
 import { api, ApiError } from "@/lib/api";
 import { posLabel, posShort, type Entry, type SearchResult, type WordItem } from "@/lib/dictionary";
 
@@ -18,10 +20,7 @@ function SearchIcon() {
 // Tombol bunyi sederhana memakai suara bawaan browser.
 // Pemutar lengkap (suara wanita/pria, kecepatan, putar lambat) dibuat di tugas 4.
 function PlayButton({ word }: { word: string }) {
-  const [supported, setSupported] = useState(false);
-  useEffect(() => {
-    setSupported(typeof window !== "undefined" && "speechSynthesis" in window);
-  }, []);
+  const supported = useSpeechSupported();
   if (!supported) return null;
 
   function play() {
@@ -82,8 +81,7 @@ export default function KamusPage() {
   useEffect(() => {
     const q = text.trim();
     if (!q) {
-      suggestSeq.current++;
-      setSuggest([]);
+      suggestSeq.current++; // jawaban server yang masih di jalan diabaikan
       return;
     }
     const seq = ++suggestSeq.current;
@@ -195,7 +193,10 @@ export default function KamusPage() {
               <input
                 type="search"
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  if (!e.target.value.trim()) setSuggest([]);
+                }}
                 onFocus={() => setFocused(true)}
                 onBlur={() => setTimeout(() => setFocused(false), 150)}
                 onKeyDown={onKeyDown}
@@ -363,13 +364,7 @@ function EntryDetail({ entry }: { entry: Entry }) {
         <PlayButton word={entry.headword} />
       </div>
 
-      {(entry.phoneticIpa || entry.phoneticEasy) && (
-        <p className="mt-1.5 text-[13px] font-semibold text-pri lg:text-[14px]">
-          {entry.phoneticIpa}
-          {entry.phoneticIpa && entry.phoneticEasy ? " · " : ""}
-          {entry.phoneticEasy ? `“${entry.phoneticEasy}”` : ""}
-        </p>
-      )}
+      <EjaanKata ipa={entry.phoneticIpa} easy={entry.phoneticEasy} />
 
       <div className="mt-2 flex flex-wrap gap-2">
         {kinds.map((k) => (
