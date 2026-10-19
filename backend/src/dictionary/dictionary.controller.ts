@@ -33,6 +33,12 @@ export class DictionaryController {
     return this.dictionary.search(q, page, limit, pos, level);
   }
 
+  // Ejaan banyak kata sekaligus, mis. /dictionary/phonetics?words=tell,me,about
+  @Get('phonetics')
+  phonetics(@Query('words') words = '') {
+    return this.dictionary.phonetics(words);
+  }
+
   @Get('entries/:id')
   detail(@Param('id') id: string) {
     return this.dictionary.detail(id);

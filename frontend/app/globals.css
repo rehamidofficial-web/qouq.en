@@ -1,26 +1,264 @@
 @import "tailwindcss";
+@source "../app";
+@source "../components";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #f5efea;
+  --screen: linear-gradient(165deg, #f9e3e7 0%, #eeeee9 48%, #d2ece8 100%);
+  --card: rgba(255, 255, 255, 0.66);
+  --ink: #0b1a14;
+  --muted: #4f6159;
+  --line: rgba(15, 42, 34, 0.16);
+  --pri: #14392b;
+  --onpri: #f7f1e3;
+  --acc: #c9672b;
+  --soft: rgba(20, 57, 43, 0.09);
+  --ok: #2b7f4b;
+  --okbg: #d8efdd;
+  --bad: #b93e2a;
+  --badbg: #f7dad3;
+  --warn: #8a6410;
+  --warnbg: #f6ebc4;
+  --gold: #8a6b1e;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --bg: #0f2a22;
+    --screen: linear-gradient(165deg, #2a1f2e 0%, #14322f 52%, #0e3b3a 100%);
+    --card: rgba(247, 241, 227, 0.08);
+    --ink: #f7f1e3;
+    --muted: #b7c4b4;
+    --line: rgba(230, 201, 127, 0.28);
+    --pri: #e6c97f;
+    --onpri: #0f2a22;
+    --acc: #f0a15f;
+    --soft: rgba(247, 241, 227, 0.09);
+    --ok: #7fd19a;
+    --okbg: #1b4a35;
+    --bad: #ff9a85;
+    --badbg: #4a2a24;
+    --warn: #e6c97f;
+    --warnbg: #3d3a1c;
+    --gold: #e6c97f;
   }
 }
 
+:root[data-theme="dark"] {
+  --bg: #0f2a22;
+  --screen: linear-gradient(165deg, #2a1f2e 0%, #14322f 52%, #0e3b3a 100%);
+  --card: rgba(247, 241, 227, 0.08);
+  --ink: #f7f1e3;
+  --muted: #b7c4b4;
+  --line: rgba(230, 201, 127, 0.28);
+  --pri: #e6c97f;
+  --onpri: #0f2a22;
+  --acc: #f0a15f;
+  --soft: rgba(247, 241, 227, 0.09);
+  --ok: #7fd19a;
+  --okbg: #1b4a35;
+  --bad: #ff9a85;
+  --badbg: #4a2a24;
+  --warn: #e6c97f;
+  --warnbg: #3d3a1c;
+  --gold: #e6c97f;
+}
+
+/* Nama warna untuk Tailwind: bg-card, text-ink, text-muted, border-line, dst. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-pri: var(--pri);
+  --color-onpri: var(--onpri);
+  --color-acc: var(--acc);
+  --color-soft: var(--soft);
+  --color-ok: var(--ok);
+  --color-okbg: var(--okbg);
+  --color-bad: var(--bad);
+  --color-badbg: var(--badbg);
+  --color-warn: var(--warn);
+  --color-warnbg: var(--warnbg);
+  --color-gold: var(--gold);
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --radius-card: 18px;
+  --radius-field: 12px;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  background-image: var(--screen);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
+}
+
+/* Komponen yang dipakai berulang. Dibuat sekali di sini, dipakai di semua halaman. */
+@layer components {
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 8px 22px rgba(15, 42, 34, 0.07);
+    backdrop-filter: blur(6px);
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 34px;
+    padding: 0 13px;
+    border-radius: 999px;
+    background: var(--soft);
+    color: var(--pri);
+    border: 1px solid color-mix(in srgb, var(--pri) 16%, transparent);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .chip-on {
+    background: var(--pri);
+    color: var(--onpri);
+  }
+  .chip-ok {
+    background: var(--okbg);
+    color: var(--ok);
+    border-color: transparent;
+  }
+  .chip-gold {
+    background: var(--warnbg);
+    color: var(--warn);
+    border-color: transparent;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 50px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #f1dd9c, #dc8a45);
+    color: #0f2a22;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(220, 138, 69, 0.28);
+    cursor: pointer;
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--pri);
+    border: 1.5px solid var(--pri);
+    box-shadow: none;
+  }
+  .btn-danger {
+    border-color: var(--bad);
+    color: var(--bad);
+  }
+  .field {
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    border-radius: 12px;
+    border: 1.5px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+  }
+  .field:focus-visible {
+    outline: 2px solid var(--acc);
+    outline-offset: 2px;
+  }
+  .field[aria-invalid="true"] {
+    border-color: var(--bad);
+  }
+  .bar {
+    height: 8px;
+    border-radius: 9px;
+    background: var(--line);
+    overflow: hidden;
+  }
+  .bar > i {
+    display: block;
+    height: 100%;
+    border-radius: 9px;
+    background: linear-gradient(90deg, #e6c97f, #dc8a45);
+  }
+  .note {
+    background: var(--warnbg);
+    border-left: 4px solid var(--warn);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  .note-bad {
+    background: var(--badbg);
+    border-left-color: var(--bad);
+  }
+}
+
+/* Tombol dan tautan minimal 44px supaya mudah ditekan di ponsel */
+button,
+a {
+  min-height: 0;
+}
+@layer components {
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    border-radius: 16px;
+    font-weight: 600;
+    color: var(--muted);
+    transition:
+      background 0.15s,
+      color 0.15s;
+  }
+  .nav-item:hover {
+    color: var(--ink);
+    background: var(--soft);
+  }
+  .nav-item[aria-current="page"] {
+    color: var(--pri);
+    background: linear-gradient(
+      135deg,
+      rgba(230, 201, 127, 0.5),
+      rgba(220, 138, 69, 0.38)
+    );
+  }
+  .nav-item:focus-visible,
+  .tab-item:focus-visible {
+    outline: 2px solid var(--acc);
+    outline-offset: 2px;
+  }
+  .tab-item {
+    flex: 1;
+    min-height: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .tab-item[aria-current="page"] {
+    color: var(--pri);
+  }
 }

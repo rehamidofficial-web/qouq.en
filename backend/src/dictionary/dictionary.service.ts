@@ -97,6 +97,26 @@ export class DictionaryService {
     return { page: p, hasMore: rows.length > size, items: rows.slice(0, size) };
   }
 
+  async phonetics(words: string) {
+    const list = Array.from(
+      new Set(
+        (words ?? '')
+          .split(',')
+          .map((w) => w.trim().toLowerCase())
+          .filter((w) => /^[a-z][a-z'-]*$/.test(w)),
+      ),
+    ).slice(0, 60);
+    if (list.length === 0) return [];
+
+    return this.prisma.$queryRaw<
+      { headword: string; phoneticIpa: string | null; phoneticEasy: string | null }[]
+    >(Prisma.sql`
+      SELECT lower("headword") AS "headword", "phoneticIpa", "phoneticEasy"
+      FROM "DictionaryEntry"
+      WHERE lower("headword") = ANY(${list}::text[])
+    `);
+  }
+
   async detail(id: string) {
     const entry = await this.prisma.dictionaryEntry.findUnique({
       where: { id },
