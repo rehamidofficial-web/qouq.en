@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { EXTRA_PHONETICS } from './extra-phonetics';
 
 type WordRow = {
   id: string;
@@ -108,13 +109,23 @@ export class DictionaryService {
     ).slice(0, 60);
     if (list.length === 0) return [];
 
-    return this.prisma.$queryRaw<
+    const rows = await this.prisma.$queryRaw<
       { headword: string; phoneticIpa: string | null; phoneticEasy: string | null }[]
     >(Prisma.sql`
       SELECT lower("headword") AS "headword", "phoneticIpa", "phoneticEasy"
       FROM "DictionaryEntry"
       WHERE lower("headword") = ANY(${list}::text[])
     `);
+
+    // Kata yang tidak ada di kamus (what, is, it, ...) diambil dari daftar tambahan.
+    const found = new Set(rows.map((r) => r.headword));
+    for (const w of list) {
+      const extra = EXTRA_PHONETICS[w];
+      if (!found.has(w) && extra) {
+        rows.push({ headword: w, phoneticIpa: extra[0], phoneticEasy: extra[1] });
+      }
+    }
+    return rows;
   }
 
   async detail(id: string) {
