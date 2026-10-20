@@ -165,7 +165,7 @@ export function EjaanKalimat({ text, ipa, easy }: { text: string; ipa?: string |
   }, [keyText]);
 
   const current = fetched && fetched.key === keyText ? fetched : null;
-  const info: Record<string, WordInfo> | null = keyText ? (current?.info ?? null) : {};
+  const info = useMemo<Record<string, WordInfo> | null>(() => (keyText ? (current?.info ?? null) : {}), [keyText, current]);
   const failed = Boolean(current && current.info === null);
 
   // Kalau kalimat punya ejaan sendiri di database, itu yang dipakai. Kalau tidak, disusun dari kata-kata.
