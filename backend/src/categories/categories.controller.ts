@@ -28,6 +28,11 @@ export class CategoriesController {
     return this.categories.listSentences(idOrSlug, level, q, page, limit);
   }
 
+  @Get('sentences/:id/neighbors')
+  neighbors(@Param('id') id: string) {
+    return this.categories.getNeighbors(id);
+  }
+
   @Get('sentences/:id')
   sentence(@Param('id') id: string) {
     return this.categories.getSentence(id);

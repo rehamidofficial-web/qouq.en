@@ -69,7 +69,7 @@ export class CategoriesService {
     const [rows, total] = await Promise.all([
       this.prisma.sentence.findMany({
         where,
-        orderBy: [{ level: 'asc' }, { createdAt: 'asc' }],
+        orderBy: [{ level: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
         skip: (safePage - 1) * safeLimit,
         take: safeLimit,
         select: {
@@ -119,5 +119,28 @@ export class CategoriesService {
     }
     const { tags, ...rest } = sentence;
     return { ...rest, tags: tags.map((t) => t.tag.name) };
+  }
+
+  /** Posisi kalimat di kategorinya, plus kalimat sebelum dan sesudahnya (urutan sama dengan daftar). */
+  async getNeighbors(id: string) {
+    const current = await this.prisma.sentence.findFirst({
+      where: { id, status: 'PUBLISHED' },
+      select: { categoryId: true },
+    });
+    if (!current) {
+      throw new NotFoundException('Kalimat tidak ditemukan');
+    }
+    const rows = await this.prisma.sentence.findMany({
+      where: { categoryId: current.categoryId, status: 'PUBLISHED' },
+      orderBy: [{ level: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+      select: { id: true },
+    });
+    const i = rows.findIndex((r) => r.id === id);
+    return {
+      position: i + 1,
+      total: rows.length,
+      prevId: i > 0 ? rows[i - 1].id : null,
+      nextId: i >= 0 && i < rows.length - 1 ? rows[i + 1].id : null,
+    };
   }
 }

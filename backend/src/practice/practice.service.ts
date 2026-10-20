@@ -206,7 +206,7 @@ export class PracticeService {
     const [rows, total, allCount, doneCount] = await Promise.all([
       this.prisma.sentence.findMany({
         where,
-        orderBy: [{ level: 'asc' }, { createdAt: 'asc' }],
+        orderBy: [{ level: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
         skip: (page - 1) * limit,
         take: limit,
         select: {
