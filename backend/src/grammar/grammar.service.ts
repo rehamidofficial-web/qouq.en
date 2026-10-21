@@ -62,6 +62,23 @@ export class GrammarService {
     }));
   }
 
+  /** Skor terbaik dan jumlah percobaan pengguna, per topik. */
+  async progress(userId: string) {
+    const rows = await this.prisma.grammarAttempt.groupBy({
+      by: ['topicId'],
+      where: { userId },
+      _max: { score: true },
+      _count: { _all: true },
+    });
+    return {
+      topics: rows.map((r) => ({
+        topicId: r.topicId,
+        bestScore: r._max.score ?? 0,
+        attempts: r._count._all,
+      })),
+    };
+  }
+
   /**
    * Satu topik lengkap: ringkasan aturan dan soal.
    * Kunci jawaban dan penjelasan SENGAJA tidak ikut dikirim.

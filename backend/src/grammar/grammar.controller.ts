@@ -32,6 +32,13 @@ export class GrammarController {
     return this.grammar.listTopics(level);
   }
 
+  // Skor terbaik pengguna di tiap topik.
+  @UseGuards(AuthGuard)
+  @Get('progress')
+  progress(@Req() req: AuthedRequest) {
+    return this.grammar.progress(userIdOf(req));
+  }
+
   @Get('topics/:id')
   topic(@Param('id') id: string) {
     return this.grammar.getTopic(id);
