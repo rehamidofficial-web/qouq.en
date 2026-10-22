@@ -68,6 +68,9 @@ model UserProfile {
   defaultAccent String          @default("US")
   defaultSpeed  Float           @default(1.0)
   theme         ThemePreference @default(SYSTEM)
+  dailyGoalMinutes Int          @default(15)
+  avatarUrl     String?         @db.Text
+  coverUrl      String?         @db.Text
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 

@@ -144,6 +144,143 @@ export class PracticeService {
     };
   }
 
+  /**
+   * Ringkasan untuk Beranda dan Statistik. Hari dihitung memakai waktu WIB (UTC+7).
+   * Menit belajar diperkirakan dari jarak antar percobaan: jarak sampai 3 menit dihitung utuh,
+   * percobaan pertama atau setelah jeda lama dihitung 1 menit.
+   */
+  async stats(userId: string, days: number) {
+    const range = days === 30 ? 30 : 7;
+    const WIB = 7 * 3600 * 1000;
+    const DAY = 86400000;
+    const dayKey = (d: Date) => new Date(d.getTime() + WIB).toISOString().slice(0, 10);
+    const today = new Date();
+    const todayKey = dayKey(today);
+
+    const profile = await this.prisma.userProfile.findUnique({
+      where: { userId },
+      select: { dailyGoalMinutes: true },
+    });
+
+    const since = new Date(today.getTime() - 365 * DAY);
+    const rowsDesc = await this.prisma.practiceAttempt.findMany({
+      where: { session: { userId }, createdAt: { gte: since } },
+      select: { createdAt: true, finalScore: true, sentenceId: true, details: true },
+      orderBy: { createdAt: 'desc' },
+      take: 5000,
+    });
+    const grammar = await this.prisma.grammarAttempt.findMany({
+      where: { userId, createdAt: { gte: since } },
+      select: { createdAt: true, score: true },
+    });
+
+    // Menit per hari (perkiraan)
+    const minutesByDay = new Map<string, number>();
+    const asc = [...rowsDesc].reverse();
+    let prev: Date | null = null;
+    for (const r of asc) {
+      const gap = prev ? r.createdAt.getTime() - prev.getTime() : Infinity;
+      const add = gap <= 3 * 60000 ? gap / 60000 : 1;
+      const k = dayKey(r.createdAt);
+      minutesByDay.set(k, (minutesByDay.get(k) ?? 0) + add);
+      prev = r.createdAt;
+    }
+    for (const g of grammar) {
+      const k = dayKey(g.createdAt);
+      minutesByDay.set(k, (minutesByDay.get(k) ?? 0) + 3);
+    }
+
+    const activeDays = new Set([
+      ...rowsDesc.map((r) => dayKey(r.createdAt)),
+      ...grammar.map((g) => dayKey(g.createdAt)),
+    ]);
+    let streak = 0;
+    const cursor = new Date(today);
+    if (!activeDays.has(dayKey(cursor))) cursor.setTime(cursor.getTime() - DAY);
+    while (activeDays.has(dayKey(cursor))) {
+      streak++;
+      cursor.setTime(cursor.getTime() - DAY);
+    }
+
+    const from = dayKey(new Date(today.getTime() - (range - 1) * DAY));
+    const prevFrom = dayKey(new Date(today.getTime() - (2 * range - 1) * DAY));
+    const inRange = rowsDesc.filter((r) => dayKey(r.createdAt) >= from);
+    const inPrev = rowsDesc.filter((r) => {
+      const k = dayKey(r.createdAt);
+      return k >= prevFrom && k < from;
+    });
+
+    const perDay = new Map<string, { sum: number; n: number }>();
+    for (const r of inRange) {
+      const k = dayKey(r.createdAt);
+      const d = perDay.get(k) ?? { sum: 0, n: 0 };
+      d.sum += r.finalScore;
+      d.n += 1;
+      perDay.set(k, d);
+    }
+    const trend: { date: string; attempts: number; avg: number | null; minutes: number }[] = [];
+    for (let i = range - 1; i >= 0; i--) {
+      const k = dayKey(new Date(today.getTime() - i * DAY));
+      const d = perDay.get(k);
+      trend.push({
+        date: k,
+        attempts: d?.n ?? 0,
+        avg: d ? Math.round(d.sum / d.n) : null,
+        minutes: Math.round(minutesByDay.get(k) ?? 0),
+      });
+    }
+
+    const weak = new Map<string, number>();
+    for (const r of inRange) {
+      const words = (r.details as { words?: { status: string; target?: string }[] } | null)?.words;
+      if (!Array.isArray(words)) continue;
+      for (const w of words) {
+        if ((w.status === 'wrong' || w.status === 'missing') && w.target) {
+          const key = w.target.toLowerCase();
+          weak.set(key, (weak.get(key) ?? 0) + 1);
+        }
+      }
+    }
+    const weakWords = [...weak.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([word, count]) => ({ word, count }));
+
+    const todayRows = rowsDesc.filter((r) => dayKey(r.createdAt) === todayKey);
+    const avgOf = (list: { finalScore: number }[]) =>
+      list.length ? Math.round(list.reduce((s, r) => s + r.finalScore, 0) / list.length) : null;
+    const avgScore = avgOf(inRange);
+    const avgPrev = avgOf(inPrev);
+
+    // XP: tiap percobaan = skor/10 (maks 10), tiap latihan grammar = skor/5. Hari ini dihitung terpisah.
+    const xpOf = (key: (d: Date) => boolean) =>
+      rowsDesc.filter((r) => key(r.createdAt)).reduce((s, r) => s + Math.round(r.finalScore / 10), 0) +
+      grammar.filter((g) => key(g.createdAt)).reduce((s, g) => s + Math.round(g.score / 5), 0);
+    const bestScore = rowsDesc.reduce((m, r) => Math.max(m, r.finalScore), 0);
+    const totalSentences = new Set(rowsDesc.map((r) => r.sentenceId)).size;
+
+    return {
+      range,
+      streak,
+      goalMinutes: profile?.dailyGoalMinutes ?? 15,
+      today: {
+        attempts: todayRows.length,
+        sentences: new Set(todayRows.map((r) => r.sentenceId)).size,
+        minutes: Math.round(minutesByDay.get(todayKey) ?? 0),
+        xp: xpOf((d) => dayKey(d) === todayKey),
+      },
+      sentences: new Set(inRange.map((r) => r.sentenceId)).size,
+      attempts: inRange.length,
+      avgScore,
+      avgDelta: avgScore !== null && avgPrev !== null ? avgScore - avgPrev : null,
+      xp: xpOf(() => true),
+      totalSentences,
+      bestScore,
+      trend,
+      weakWords,
+    };
+  }
+
   /** Berapa kalimat berbeda yang sudah dilatih pengguna, per kategori. */
   async progressByCategory(userId: string) {
     const categories = await this.prisma.$queryRaw<

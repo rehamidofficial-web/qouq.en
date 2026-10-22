@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -12,6 +13,7 @@ import { AuthService } from './auth.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
 interface AuthedRequest {
@@ -56,5 +58,11 @@ export class AuthController {
   @UseGuards(AuthGuard)
   me(@Req() req: AuthedRequest) {
     return this.auth.getMe(req.user.sub);
+  }
+
+  @Patch('me')
+  @UseGuards(AuthGuard)
+  updateMe(@Req() req: AuthedRequest, @Body() dto: UpdateProfileDto) {
+    return this.auth.updateMe(req.user.sub, dto);
   }
 }

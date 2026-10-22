@@ -1,3 +1,4 @@
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import {
   BadRequestException,
   ConflictException,
@@ -160,5 +161,27 @@ export class AuthService {
       throw new UnauthorizedException();
     }
     return { ...user, roles: user.roles.map((r) => r.role.name) };
+  }
+
+  async updateMe(userId: string, dto: UpdateProfileDto) {
+    const { name, level, dailyGoalMinutes, avatarUrl, coverUrl } = dto;
+    if (name !== undefined) {
+      await this.prisma.user.update({ where: { id: userId }, data: { name: name.trim() } });
+    }
+    const data = {
+      ...(level !== undefined && { level }),
+      ...(dailyGoalMinutes !== undefined && { dailyGoalMinutes }),
+      // String kosong berarti hapus
+      ...(avatarUrl !== undefined && { avatarUrl: avatarUrl || null }),
+      ...(coverUrl !== undefined && { coverUrl: coverUrl || null }),
+    };
+    if (Object.keys(data).length > 0) {
+      await this.prisma.userProfile.upsert({
+        where: { userId },
+        create: { userId, ...data },
+        update: data,
+      });
+    }
+    return this.getMe(userId);
   }
 }

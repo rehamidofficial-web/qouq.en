@@ -58,6 +58,16 @@ export class PracticeController {
     return this.practice.finishSession(userIdOf(req), id);
   }
 
+  // Ringkasan Beranda/Statistik: streak, skor rata-rata, tren, kata lemah.
+  @UseGuards(AuthGuard)
+  @Get('stats')
+  stats(
+    @Req() req: AuthedRequest,
+    @Query('days', new DefaultValuePipe(7), ParseIntPipe) days: number,
+  ) {
+    return this.practice.stats(userIdOf(req), days);
+  }
+
   // Kemajuan per kategori: berapa kalimat yang sudah dilatih.
   @UseGuards(AuthGuard)
   @Get('progress')
