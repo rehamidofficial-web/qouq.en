@@ -46,3 +46,6 @@ export const TONE_CLASS = {
   mid: "bg-warnbg text-warn",
   bad: "bg-badbg text-bad",
 } as const;
+
+// Posisi sebuah kalimat di dalam kategorinya (untuk "43/100" dan tombol "Kalimat berikutnya").
+export type Neighbors = { position: number; total: number; prevId: string | null; nextId: string | null };

@@ -62,33 +62,80 @@ export function mapError(code: string): RecError | null {
   }
 }
 
-export const ERROR_TEXT: Record<RecError, { title: string; body: string }> = {
+export type ErrorInfo = {
+  title: string; // judul pendek
+  why: string; // penjelasan satu kalimat
+  steps: string[]; // langkah mengatasinya, berurutan
+  retry: boolean; // apakah tombol "Coba lagi" masuk akal
+  copyLink: boolean; // apakah perlu tombol "Salin alamat" (untuk dibuka di browser lain)
+};
+
+export const ERROR_TEXT: Record<RecError, ErrorInfo> = {
+  denied: {
+    title: "Izin mikrofon ditolak",
+    why: "Browser memblokir izin mikrofon untuk situs ini, jadi suaramu tidak bisa didengar.",
+    steps: [
+      "Klik ikon gembok di sebelah kiri alamat situs.",
+      "Ubah Mikrofon menjadi Izinkan.",
+      "Muat ulang halaman ini, lalu tekan Coba lagi.",
+    ],
+    retry: true,
+    copyLink: false,
+  },
   unsupported: {
     title: "Browser ini belum mendukung pengenalan suara",
-    body: "Pakai Chrome atau Edge versi terbaru di komputer atau Android. Sementara itu kamu tetap bisa mendengarkan contoh dan membaca arti.",
+    why: "Fitur mengubah suara menjadi teks hanya ada di Chrome dan Edge (komputer atau Android).",
+    steps: [
+      "Salin alamat halaman ini, lalu buka di Chrome atau Edge versi terbaru.",
+      "Firefox dan sebagian browser iPhone belum mendukungnya.",
+    ],
+    retry: false,
+    copyLink: true,
   },
   insecure: {
     title: "Halaman ini belum memakai koneksi aman (HTTPS)",
-    body: "Browser hanya mengizinkan mikrofon di alamat yang aman. Buka lewat alamat https:// atau localhost.",
-  },
-  denied: {
-    title: "Izin mikrofon ditolak",
-    body: "Klik ikon gembok di kiri alamat situs, ubah Mikrofon menjadi Izinkan, lalu muat ulang halaman.",
+    why: "Browser hanya mengizinkan mikrofon di alamat yang aman.",
+    steps: [
+      "Buka lewat alamat yang diawali https://.",
+      "Kalau kamu sedang mengembangkan di komputer sendiri, pakai alamat http://localhost:3000.",
+    ],
+    retry: false,
+    copyLink: false,
   },
   "no-mic": {
     title: "Mikrofon tidak ditemukan",
-    body: "Pastikan mikrofon terpasang, menyala, dan tidak sedang dipakai aplikasi lain.",
+    why: "Browser tidak menemukan mikrofon yang bisa dipakai.",
+    steps: [
+      "Pastikan mikrofon (atau headset) terpasang dan menyala.",
+      "Di Windows: Pengaturan, Sistem, Suara, lalu pilih mikrofon yang benar di bagian Input.",
+      "Tutup aplikasi lain yang sedang memakai mikrofon, misalnya Zoom atau Meet, lalu tekan Coba lagi.",
+    ],
+    retry: true,
+    copyLink: false,
   },
   "no-speech": {
     title: "Tidak ada suara yang terdengar",
-    body: "Dekatkan mikrofon, bicara sedikit lebih keras, lalu coba lagi.",
+    why: "Mikrofon aktif, tapi belum menangkap ucapan apa pun.",
+    steps: [
+      "Tunggu sampai tertulis “Mendengarkan…”, baru bicara.",
+      "Dekatkan mikrofon dan bicara sedikit lebih keras.",
+      "Cari tempat yang lebih tenang, lalu tekan Coba lagi.",
+    ],
+    retry: true,
+    copyLink: false,
   },
   network: {
     title: "Pengenalan suara butuh internet",
-    body: "Periksa koneksi internetmu, lalu coba lagi.",
+    why: "Chrome mengirim suara ke layanannya untuk dijadikan teks, jadi koneksi harus aktif.",
+    steps: ["Periksa koneksi internetmu.", "Tekan Coba lagi."],
+    retry: true,
+    copyLink: false,
   },
   other: {
     title: "Pengenalan suara terhenti",
-    body: "Coba tekan tombol mikrofon sekali lagi. Kalau masih gagal, muat ulang halaman.",
+    why: "Browser menghentikan perekaman secara tiba-tiba.",
+    steps: ["Tekan Coba lagi.", "Kalau masih gagal, muat ulang halaman."],
+    retry: true,
+    copyLink: false,
   },
 };

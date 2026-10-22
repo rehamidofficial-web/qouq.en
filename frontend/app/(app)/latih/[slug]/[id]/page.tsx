@@ -8,6 +8,7 @@ import { ArtiCard, EjaanKalimat } from "@/components/ejaan/Ejaan";
 import Rekam from "@/components/rekam/Rekam";
 import { api, ApiError } from "@/lib/api";
 import type { SentenceDetail } from "@/lib/latih";
+import type { Neighbors } from "@/lib/practice";
 
 export default function PemutarPage() {
   const { slug, id } = useParams<{ slug: string; id: string }>();
@@ -18,9 +19,14 @@ export default function PemutarPage() {
 function Pemutar({ slug, id }: { slug: string; id: string }) {
   const [s, setS] = useState<SentenceDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [nb, setNb] = useState<Neighbors | null>(null);
 
   useEffect(() => {
     let alive = true;
+    // Posisi kalimat (43/100) dan kalimat berikutnya. Kalau gagal, halaman tetap jalan tanpa itu.
+    api<Neighbors>(`/sentences/${encodeURIComponent(id)}/neighbors`)
+      .then((d) => alive && setNb(d))
+      .catch(() => {});
     api<SentenceDetail>(`/sentences/${encodeURIComponent(id)}`)
       .then((d) => alive && setS(d))
       .catch((err) => alive && setError(err instanceof ApiError ? err.message : "Terjadi kesalahan. Coba lagi."));
@@ -35,7 +41,9 @@ function Pemutar({ slug, id }: { slug: string; id: string }) {
         <Link href={`/latih/${slug}`} className="text-[13px] font-semibold text-pri">
           ← {s?.category.name ?? "Daftar kalimat"}
         </Link>
-        <p className="mt-2 text-[13px] text-muted">{s ? `${s.category.name} · Mode Latihan` : "Mode Latihan"}</p>
+        <p className="mt-2 text-[13px] text-muted">
+          {s ? `${s.category.name}${nb ? ` · ${nb.position}/${nb.total}` : ""} · Mode Latihan` : "Mode Latihan"}
+        </p>
       </div>
 
       {error && (
@@ -61,7 +69,13 @@ function Pemutar({ slug, id }: { slug: string; id: string }) {
               <AudioPlayer text={s.textEn} />
             </section>
             <section className="card lg:!p-[22px]" aria-label="Rekam suara">
-              <Rekam sentenceId={s.id} categoryId={s.category.id} text={s.textEn} />
+              <Rekam
+                sentenceId={s.id}
+                categoryId={s.category.id}
+                text={s.textEn}
+                nextHref={nb?.nextId ? `/latih/${slug}/${nb.nextId}` : null}
+                backHref={`/latih/${slug}`}
+              />
             </section>
           </div>
         </div>

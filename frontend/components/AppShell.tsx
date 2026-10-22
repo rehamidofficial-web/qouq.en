@@ -13,7 +13,10 @@ const NAV: { href: string; label: string; icon: IconName }[] = [
 ];
 
 function isActive(path: string, href: string) {
-  return href === "/" ? path === "/" : path === href || path.startsWith(href + "/");
+  if (href === "/") return path === "/";
+  // Grammar bagian dari tab Latih.
+  if (href === "/latih" && (path === "/grammar" || path.startsWith("/grammar/"))) return true;
+  return path === href || path.startsWith(href + "/");
 }
 
 function Wordmark({ short = false }: { short?: boolean }) {

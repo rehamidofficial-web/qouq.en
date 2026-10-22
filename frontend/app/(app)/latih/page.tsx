@@ -60,6 +60,16 @@ export default function LatihPage() {
         </p>
       </div>
 
+      <Link href="/grammar" className="card flex items-center justify-between gap-3 !p-3.5 transition-transform hover:-translate-y-0.5">
+        <span>
+          <b className="block text-[15px]">Latihan grammar</b>
+          <span className="text-[12.5px] text-muted">Baca aturan singkat, lalu jawab soal pilihan ganda dan isian.</span>
+        </span>
+        <span aria-hidden="true" className="text-[18px] text-pri">
+          →
+        </span>
+      </Link>
+
       <input
         type="search"
         value={q}

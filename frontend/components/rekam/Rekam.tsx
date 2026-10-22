@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
+import Kendala from "@/components/rekam/Kendala";
+import Koreksi from "@/components/rekam/Koreksi";
 import { api, ApiError } from "@/lib/api";
 import { readAudioPrefs } from "@/lib/audioPrefs";
 import { useAuth } from "@/lib/auth";
-import { scoreTone, type AttemptResult, type Score, type WordResult } from "@/lib/practice";
-import { ERROR_TEXT } from "@/lib/recognizer";
+import { forgetSession, readSession, saveSession } from "@/lib/practiceSession";
+import type { AttemptResult, Score } from "@/lib/practice";
+import type { RecError } from "@/lib/recognizer";
 import { useRecognizer, type Heard } from "@/lib/useRecognizer";
 
 const LANG = { US: "en-US", UK: "en-GB", AU: "en-AU" } as const;
@@ -38,85 +41,20 @@ function Wave() {
   );
 }
 
-function WordChip({ w }: { w: WordResult }) {
-  if (w.status === "correct") {
-    return <span className="rounded-lg bg-okbg px-2 py-0.5 text-ok">{w.target}</span>;
-  }
-  if (w.status === "wrong") {
-    return (
-      <span className="rounded-lg bg-badbg px-2 py-0.5 text-bad" title={`Terdengar: ${w.heard}`}>
-        {w.target}
-      </span>
-    );
-  }
-  if (w.status === "missing") {
-    return <span className="rounded-lg border border-dashed border-warn bg-warnbg px-2 py-0.5 text-warn">{w.target}</span>;
-  }
-  return (
-    <span className="rounded-lg border border-line px-2 py-0.5 text-muted line-through" title="Kata tambahan yang tidak ada di kalimat">
-      {w.heard}
-    </span>
-  );
-}
-
-function ResultView({ result, heard, saved, onRetry }: { result: AttemptResult; heard: string; saved: boolean; onRetry: () => void }) {
-  const tone = scoreTone(result.finalScore);
-  const color = tone === "ok" ? "var(--ok)" : tone === "mid" ? "var(--warn)" : "var(--bad)";
-  return (
-    <div className="flex flex-col gap-3" aria-live="polite">
-      <p className="text-[11px] font-bold uppercase tracking-[.06em] text-muted">Hasil</p>
-      <div className="flex items-center gap-4">
-        <div
-          className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full"
-          style={{ background: `conic-gradient(${color} ${result.finalScore}%, var(--line) 0)` }}
-          role="img"
-          aria-label={`Skor ${result.finalScore} dari 100`}
-        >
-          <div className="grid h-[56px] w-[56px] place-items-center rounded-full bg-bg text-[20px] font-extrabold" style={{ color }}>
-            {result.finalScore}
-          </div>
-        </div>
-        <div>
-          <p className="text-[18px] font-bold">{result.label}</p>
-          <p className="text-[13.5px] text-muted">{result.feedback}</p>
-        </div>
-      </div>
-
-      <div>
-        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[.06em] text-muted">Kata per kata</p>
-        <p className="flex flex-wrap gap-1.5 text-[15px] font-semibold leading-8">
-          {result.words.map((w, i) => (
-            <WordChip key={i} w={w} />
-          ))}
-        </p>
-        <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-muted">
-          <span className="text-ok">■ benar</span>
-          <span className="text-bad">■ salah ucap</span>
-          <span className="text-warn">■ terlewat</span>
-          <span>■ <s>tambahan</s></span>
-        </p>
-      </div>
-
-      <div className="card !p-3 text-[13.5px]">
-        <span className="text-muted">Terdengar</span>
-        <p className="mt-0.5 font-semibold">“{heard}”</p>
-      </div>
-
-      {!saved && (
-        <p className="note text-[13px]">
-          Skor ini belum tersimpan. <Link href="/masuk" className="font-bold underline">Masuk</Link> dulu supaya latihanmu tercatat.
-        </p>
-      )}
-
-      <button type="button" className="btn" onClick={onRetry}>
-        Coba lagi
-      </button>
-    </div>
-  );
-}
-
 // Rekam suara -> teks (di browser) -> kirim ke backend untuk dinilai -> tampilkan skor.
-export default function Rekam({ sentenceId, categoryId, text }: { sentenceId: string; categoryId: string; text: string }) {
+export default function Rekam({
+  sentenceId,
+  categoryId,
+  text,
+  nextHref,
+  backHref,
+}: {
+  sentenceId: string;
+  categoryId: string;
+  text: string;
+  nextHref: string | null;
+  backHref: string;
+}) {
   const { token } = useAuth();
   const sessionId = useRef<string | null>(null);
 
@@ -124,8 +62,36 @@ export default function Rekam({ sentenceId, categoryId, text }: { sentenceId: st
   const [result, setResult] = useState<AttemptResult | null>(null);
   const [spoken, setSpoken] = useState("");
   const [saved, setSaved] = useState(false);
+  const [listenOnly, setListenOnly] = useState(false); // "Latihan tanpa merekam"
+  const [round, setRound] = useState(0); // naik setiap ada hasil baru, supaya layar hasil mulai dari awal
   const [sendError, setSendError] = useState<string | null>(null);
   const [lastHeard, setLastHeard] = useState<Heard | null>(null);
+
+  // Kirim hasil ke sesi latihan. Sesi lama dipakai ulang; kalau sudah tidak berlaku, dibuat yang baru.
+  async function saveAttempt(h: Heard, jwt: string): Promise<AttemptResult> {
+    const body = { sentenceId, spokenText: h.text, confidence: h.confidence };
+    for (let attempt = 0; attempt < 2; attempt++) {
+      let id = sessionId.current ?? readSession(categoryId);
+      if (!id) {
+        const s = await api<{ id: string }>("/practice/sessions", { method: "POST", body: { categoryId, mode: "PRACTICE" }, token: jwt });
+        id = s.id;
+        saveSession(categoryId, id);
+      }
+      sessionId.current = id;
+      try {
+        return await api<AttemptResult>(`/practice/sessions/${id}/attempts`, { method: "POST", body, token: jwt });
+      } catch (err) {
+        const stale = err instanceof ApiError && (err.status === 404 || err.status === 400);
+        if (attempt === 0 && stale) {
+          sessionId.current = null;
+          forgetSession(categoryId);
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw new ApiError("Sesi latihan tidak bisa dibuat. Coba lagi.", 0);
+  }
 
   async function submit(h: Heard) {
     setLastHeard(h);
@@ -136,15 +102,7 @@ export default function Rekam({ sentenceId, categoryId, text }: { sentenceId: st
       let res: AttemptResult | null = null;
       if (token) {
         try {
-          if (!sessionId.current) {
-            const s = await api<{ id: string }>("/practice/sessions", { method: "POST", body: { categoryId, mode: "PRACTICE" }, token });
-            sessionId.current = s.id;
-          }
-          res = await api<AttemptResult>(`/practice/sessions/${sessionId.current}/attempts`, {
-            method: "POST",
-            body: { sentenceId, spokenText: h.text, confidence: h.confidence },
-            token,
-          });
+          res = await saveAttempt(h, token);
           setSaved(true);
         } catch (err) {
           // Masuknya sudah kedaluwarsa: tetap nilai, tapi tidak disimpan.
@@ -156,6 +114,7 @@ export default function Rekam({ sentenceId, categoryId, text }: { sentenceId: st
         setSaved(false);
       }
       setResult(res);
+      setRound((n) => n + 1);
     } catch (err) {
       setSendError(err instanceof ApiError ? err.message : "Terjadi kesalahan. Coba lagi.");
     } finally {
@@ -166,31 +125,31 @@ export default function Rekam({ sentenceId, categoryId, text }: { sentenceId: st
   const rec = useRecognizer(submit);
 
   function begin() {
+    setListenOnly(false);
     setResult(null);
     setSendError(null);
     rec.start(LANG[readAudioPrefs().accent]);
   }
 
-  const blocked = rec.availability !== "ok";
-  const err = blocked ? (rec.availability as "unsupported" | "insecure") : rec.error;
-  const msg = err ? ERROR_TEXT[err] : null;
+  const trouble: RecError | null = rec.availability !== "ok" ? rec.availability : rec.error;
+  const showTrouble = trouble !== null && !listenOnly && !rec.listening && !scoring && !result;
+  const showIdle = !showTrouble && !listenOnly && !result && !rec.listening && !scoring;
 
   return (
     <div className="flex flex-col" aria-label="Latihan bicara">
-      {!result && !rec.listening && !scoring && (
+      {showIdle && (
         <div className="flex flex-col items-center text-center">
           <p className="text-[11px] font-bold uppercase tracking-[.06em] text-muted">Giliranmu</p>
           <p className="mt-1 text-[13.5px] text-muted">Ucapkan kalimat di atas dengan jelas.</p>
           <button
             type="button"
             onClick={begin}
-            disabled={blocked}
             aria-label="Mulai merekam"
-            className="mt-4 grid h-[76px] w-[76px] place-items-center rounded-full bg-[linear-gradient(135deg,#F5B073,#C9672B)] text-white shadow-[0_0_0_10px_rgba(220,138,69,.2),0_0_0_22px_rgba(220,138,69,.08)] transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+            className="mt-4 grid h-[76px] w-[76px] place-items-center rounded-full bg-[linear-gradient(135deg,#F5B073,#C9672B)] text-white shadow-[0_0_0_10px_rgba(220,138,69,.2),0_0_0_22px_rgba(220,138,69,.08)] transition-transform active:scale-95"
           >
             <MicIcon size={34} />
           </button>
-          <p className="mt-6 font-bold">{blocked ? "Mikrofon belum bisa dipakai" : "Tekan untuk bicara"}</p>
+          <p className="mt-6 font-bold">Tekan untuk bicara</p>
           <p className="mt-1 text-[12px] text-muted">Aplikasi ini tidak menyimpan rekaman suara. Hanya teks hasil dan skor.</p>
         </div>
       )}
@@ -226,12 +185,28 @@ export default function Rekam({ sentenceId, categoryId, text }: { sentenceId: st
         </p>
       )}
 
-      {result && !scoring && <ResultView result={result} heard={spoken} saved={saved} onRetry={begin} />}
+      {result && !scoring && (
+        <Koreksi key={round} result={result} heard={spoken} saved={saved} onRetry={begin} nextHref={nextHref} backHref={backHref} />
+      )}
 
-      {msg && !rec.listening && !scoring && (
-        <div className="note note-bad mt-4" role="alert">
-          <b>{msg.title}</b>
-          <p className="mt-1 text-[14px]">{msg.body}</p>
+      {showTrouble && trouble && <Kendala code={trouble} onRetry={begin} onListenOnly={() => setListenOnly(true)} />}
+
+      {listenOnly && !result && !rec.listening && !scoring && (
+        <div className="flex flex-col gap-3">
+          <p className="text-[11px] font-bold uppercase tracking-[.06em] text-muted">Mode dengar-saja</p>
+          <p className="note text-[13.5px]">
+            <b>Kamu belajar tanpa merekam.</b> Dengarkan contoh pada pemutar, baca ejaan dan artinya. Skor tidak dihitung di mode ini.
+          </p>
+          <div className="flex flex-col gap-2">
+            {nextHref && (
+              <Link href={nextHref} className="btn text-center">
+                Kalimat berikutnya
+              </Link>
+            )}
+            <button type="button" className="btn btn-outline" onClick={begin}>
+              Coba rekam lagi
+            </button>
+          </div>
         </div>
       )}
 
