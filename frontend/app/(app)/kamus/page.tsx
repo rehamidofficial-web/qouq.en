@@ -4,6 +4,7 @@ import { Fragment, useCallback, useEffect, useRef, useState, type FormEvent, typ
 import { useSpeechSupported } from "@/lib/useSpeech";
 import { EjaanKata } from "@/components/ejaan/Ejaan";
 import { api, ApiError } from "@/lib/api";
+import { toggleSaved, useIsSaved } from "@/lib/savedWords";
 import { posLabel, posShort, type Entry, type SearchResult, type WordItem } from "@/lib/dictionary";
 
 type PosFilter = "" | "VERB" | "NOUN";
@@ -352,6 +353,7 @@ function Highlight({ text, word }: { text: string; word: string }) {
 }
 
 function EntryDetail({ entry }: { entry: Entry }) {
+  const saved = useIsSaved(entry.headword);
   const senses = [...entry.senses].sort((a, b) => a.sortOrder - b.sortOrder);
   const kinds = Array.from(new Set(senses.map((s) => s.partOfSpeech)));
   const syn = (entry.relations ?? []).filter((r) => r.type === "SYNONYM").map((r) => r.relatedEntry.headword);
@@ -408,12 +410,13 @@ function EntryDetail({ entry }: { entry: Entry }) {
         })}
       </div>
 
-      {(syn.length > 0 || ant.length > 0) && (
-        <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" aria-pressed={saved} className={`chip ${saved ? "chip-on" : ""}`} onClick={() => toggleSaved(entry.headword)}>
+            {saved ? "✓ Tersimpan" : "☆ Simpan"}
+          </button>
           {syn.length > 0 && <span className="chip">Sinonim: {syn.slice(0, 4).join(", ")}</span>}
           {ant.length > 0 && <span className="chip">Antonim: {ant.slice(0, 4).join(", ")}</span>}
-        </div>
-      )}
+      </div>
     </article>
   );
 }

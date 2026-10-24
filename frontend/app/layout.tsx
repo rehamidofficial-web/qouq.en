@@ -16,6 +16,7 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Qouq.en",
   description: "Belajar bahasa Inggris gratis. Istirahat boleh, menyerah jangan.",
+  manifest: "/manifest.json",
 };
 
 // Dijalankan sebelum halaman tampil, supaya tidak berkedip terang lalu gelap.

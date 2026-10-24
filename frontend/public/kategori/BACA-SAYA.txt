@@ -1,0 +1,6 @@
+Taruh gambar kategori di folder ini.
+Nama berkas = slug kategori (nama di alamat halaman) + .jpg
+Contoh: alamat /latih/wawancara  ->  wawancara.jpg
+        alamat /latih/sehari-hari -> sehari-hari.jpg
+Ukuran saran: 800 x 450 piksel (perbandingan 16:9), JPG, di bawah 200 KB.
+Kalau gambar belum ada, aplikasi menampilkan gradasi dengan huruf pertama.

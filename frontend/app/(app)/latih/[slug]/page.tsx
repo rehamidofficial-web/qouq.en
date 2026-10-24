@@ -1,5 +1,6 @@
 "use client";
 
+import CategoryImage from "@/components/CategoryImage";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -181,6 +182,8 @@ export default function KategoriPage() {
           <p className="mt-0.5 text-muted">{!error && (busy && items.length === 0 ? "Memuat…" : `${total} kalimat · latihan pelafalan`)}</p>
         </div>
       </div>
+
+      <CategoryImage slug={slug} name={name || "Kategori"} className="h-28 w-full rounded-[18px] sm:h-36" />
 
       <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr] lg:items-start">
         {/* KIRI: cari, filter, daftar */}

@@ -1,5 +1,6 @@
 "use client";
 
+import CategoryImage from "@/components/CategoryImage";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "@/lib/api";
@@ -110,8 +111,10 @@ export default function LatihPage() {
             <Link
               key={c.id}
               href={`/latih/${c.slug}`}
-              className="card flex flex-col gap-1.5 !p-3.5 transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--acc)]"
+              className="card flex min-w-0 flex-col gap-1.5 overflow-hidden !p-0 transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--acc)]"
             >
+              <CategoryImage slug={c.slug} name={c.name} className="aspect-[16/9] w-full" />
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-3.5 pt-2">
               <p className="text-[14px] font-bold leading-tight">{c.name}</p>
               {c.description && <p className="line-clamp-2 text-[11.5px] text-muted">{c.description}</p>}
               <div className="mt-auto flex items-center gap-2 pt-1.5">
@@ -126,6 +129,7 @@ export default function LatihPage() {
                     ? `${c.sentenceCount} dari ${c.targetCount} kalimat`
                     : `${mine} dari ${c.sentenceCount} sudah dilatih`}
               </p>
+              </div>
             </Link>
           );
         })}

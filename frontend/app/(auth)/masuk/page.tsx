@@ -13,6 +13,7 @@ export default function MasukPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [remember, setRemember] = useState(true);
   const [busy, setBusy] = useState(false);
 
   async function onSubmit(e: FormEvent) {
@@ -24,7 +25,7 @@ export default function MasukPage() {
     }
     setBusy(true);
     try {
-      await login(email.trim(), password);
+      await login(email.trim(), password, remember);
       router.push("/");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Terjadi kesalahan. Coba lagi.");
@@ -43,7 +44,11 @@ export default function MasukPage() {
       <AuthField id="email" label="Email" type="email" value={email} onChange={setEmail} autoComplete="email" placeholder="nama@email.com" />
       <AuthField id="password" label="Kata sandi" placeholder="Kata sandi" type="password" value={password} onChange={setPassword} autoComplete="current-password" />
 
-      <div className="flex justify-end text-[11px] lg:text-[13px]">
+      <div className="flex items-center justify-between text-[11px] lg:text-[13px]">
+        <label className="flex items-center gap-2 text-[#dde6d4]">
+          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="size-4 accent-[#e6c97f]" />
+          Ingat saya
+        </label>
         <Link href="/lupa-sandi" className="text-[#e6c97f] underline-offset-2 hover:underline">
           Lupa kata sandi?
         </Link>

@@ -29,7 +29,8 @@ function subscribeVoices(onChange: () => void) {
   return () => synth.removeEventListener("voiceschanged", refresh);
 }
 const getVoicesSnapshot = () => voicesCache;
-const getVoicesServer = (): SpeechSynthesisVoice[] => [];
+const NO_VOICES: SpeechSynthesisVoice[] = [];
+const getVoicesServer = (): SpeechSynthesisVoice[] => NO_VOICES; // harus objek yang sama setiap dibaca
 
 // Pemutar suara memakai fitur bawaan browser (Web Speech API), tanpa file audio dan tanpa biaya.
 export function useSpeech() {

@@ -1,5 +1,8 @@
 "use client";
 
+import Avatar from "@/components/Avatar";
+import StreakChip from "@/components/stats/StreakChip";
+import { useAuth } from "@/lib/auth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "./icons";
@@ -28,8 +31,24 @@ function Wordmark({ short = false }: { short?: boolean }) {
   );
 }
 
+// Kotak akun di bawah menu samping: foto + nama + level (desktop), foto saja (tablet).
+function MeBox() {
+  const { user } = useAuth();
+  if (!user) return null;
+  return (
+    <Link href="/profil" aria-label="Profil saya" className="mt-auto flex items-center gap-3 rounded-2xl p-2 hover:bg-soft">
+      <Avatar name={user.name} src={user.profile?.avatarUrl} className="size-10" />
+      <span className="hidden min-w-0 lg:block">
+        <b className="block truncate text-[13px]">{user.name}</b>
+        <span className="text-muted">Level {user.profile?.level ?? "A1"}</span>
+      </span>
+    </Link>
+  );
+}
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   return (
     <div className="flex min-h-screen flex-1 md:grid md:grid-cols-[76px_1fr] lg:grid-cols-[230px_1fr]">
@@ -58,15 +77,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
+        <MeBox />
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 max-w-full flex-1 flex-col overflow-x-clip">
         {/* Ponsel: hanya nama aplikasi. Pilihan tema ada di Profil, sesuai desain */}
-        <header className="px-4 pt-4 md:hidden">
+        <header className="flex items-center justify-between px-4 pt-4 md:hidden">
           <Wordmark />
+          <div className="flex items-center gap-2">
+            <StreakChip />
+            {user && (
+              <Link href="/profil" aria-label="Profil saya">
+                <Avatar name={user.name} src={user.profile?.avatarUrl} className="size-9" />
+              </Link>
+            )}
+          </div>
         </header>
 
-        <main className="flex-1 px-4 pb-28 pt-6 md:px-8 md:pb-10 lg:pt-8">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-clip px-4 pb-28 pt-6 md:px-8 md:pb-10 lg:pt-8">{children}</main>
       </div>
 
       {/* Ponsel: menu bawah */}

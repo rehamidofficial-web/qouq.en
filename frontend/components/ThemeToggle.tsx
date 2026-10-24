@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { Icon, type IconName } from "./icons";
 
-type Theme = "light" | "dark" | "system";
+export type Theme = "light" | "dark" | "system";
 
 const KEY = "qouq-theme";
 const EVENT = "qouq-theme-change";
@@ -14,7 +14,7 @@ const OPTIONS: { value: Theme; label: string; icon: IconName }[] = [
   { value: "system", label: "Ikut sistem", icon: "monitor" },
 ];
 
-function subscribe(callback: () => void) {
+export function subscribeTheme(callback: () => void) {
   window.addEventListener(EVENT, callback);
   window.addEventListener("storage", callback);
   return () => {
@@ -23,7 +23,7 @@ function subscribe(callback: () => void) {
   };
 }
 
-function getSnapshot(): Theme {
+export function getThemeSnapshot(): Theme {
   try {
     const saved = localStorage.getItem(KEY);
     return saved === "light" || saved === "dark" ? saved : "system";
@@ -32,11 +32,11 @@ function getSnapshot(): Theme {
   }
 }
 
-function getServerSnapshot(): Theme {
+export function getThemeServerSnapshot(): Theme {
   return "system";
 }
 
-function applyTheme(theme: Theme) {
+export function applyTheme(theme: Theme) {
   const root = document.documentElement;
   if (theme === "system") root.removeAttribute("data-theme");
   else root.setAttribute("data-theme", theme);
@@ -50,7 +50,7 @@ function applyTheme(theme: Theme) {
 }
 
 export default function ThemeToggle({ variant = "icons" }: { variant?: "icons" | "labeled" }) {
-  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, getThemeServerSnapshot);
 
   if (variant === "labeled") {
     return (
