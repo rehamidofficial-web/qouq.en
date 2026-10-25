@@ -73,16 +73,6 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    if (dto.email.toLowerCase() === 'qouqen@gmail.com') {
-      // Kita pakai id admin-hamid-id yang valid di database lo
-      const dummyUser = {
-        id: 'admin-hamid-id',
-        email: 'qouqen@gmail.com',
-        name: 'Hamid Admin',
-      };
-      return this.buildAuthResponse(dummyUser, ['admin']);
-    }
-
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
       include: { roles: { include: { role: true } } },
