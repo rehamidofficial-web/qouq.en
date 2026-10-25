@@ -64,7 +64,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
 
         <nav aria-label="Menu utama" className="flex flex-col gap-1.5">
-          {NAV.map((item) => (
+          {[...NAV, ...(user?.roles.includes("admin") ? [{ href: "/admin", label: "Admin", icon: "stat" as IconName }] : [])].map((item) => (
             <Link
               key={item.href}
               href={item.href}

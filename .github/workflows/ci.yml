@@ -28,7 +28,7 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: postgresql://neondb_owner:npg_2E1qBgnXlxUT@ep-curly-shadow-b3wgzmov.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci  # alamat palsu, hanya agar build berjalan
     defaults:
       run:
         working-directory: backend

@@ -69,7 +69,8 @@ export class DictionaryService {
           ARRAY[]::text[]
         ) AS pos
       FROM "DictionaryEntry" e
-      WHERE (e."headword" ILIKE ${awalan} OR e."headword" % ${kata})
+      WHERE e."status" = 'PUBLISHED'
+        AND (e."headword" ILIKE ${awalan} OR e."headword" % ${kata})
       ${filterPos}
       ${filterLevel}
       ORDER BY
@@ -114,7 +115,7 @@ export class DictionaryService {
     >(Prisma.sql`
       SELECT lower("headword") AS "headword", "phoneticIpa", "phoneticEasy"
       FROM "DictionaryEntry"
-      WHERE lower("headword") = ANY(${list}::text[])
+      WHERE "status" = 'PUBLISHED' AND lower("headword") = ANY(${list}::text[])
     `);
 
     // Kata yang tidak ada di kamus (what, is, it, ...) diambil dari daftar tambahan.
@@ -129,8 +130,8 @@ export class DictionaryService {
   }
 
   async detail(id: string) {
-    const entry = await this.prisma.dictionaryEntry.findUnique({
-      where: { id },
+    const entry = await this.prisma.dictionaryEntry.findFirst({
+      where: { id, status: 'PUBLISHED' },
       include: {
         senses: {
           orderBy: { sortOrder: 'asc' },

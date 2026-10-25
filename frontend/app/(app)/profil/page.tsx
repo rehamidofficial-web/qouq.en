@@ -232,6 +232,16 @@ export default function ProfilPage() {
         </div>
       </section>
 
+      {user.roles.includes("admin") && (
+        <Link href="/admin" className="card flex items-center justify-between gap-3">
+          <span>
+            <b className="block">Panel admin</b>
+            <span className="text-muted">Kelola kamus, kalimat, grammar, dan pengguna</span>
+          </span>
+          <span aria-hidden="true" className="text-muted">→</span>
+        </Link>
+      )}
+
       <Section icon="user" title="Edit profil" sub="Nama dan foto">
         <EditProfil />
       </Section>
