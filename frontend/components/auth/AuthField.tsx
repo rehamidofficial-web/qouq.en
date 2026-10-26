@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 export default function AuthField({
   id,
   label,
@@ -15,22 +19,52 @@ export default function AuthField({
   autoComplete?: string;
   placeholder?: string;
 }) {
+  // Kotak kata sandi punya tombol mata untuk melihat atau menyembunyikan isinya.
+  const isPassword = type === "password";
+  const [shown, setShown] = useState(false);
+
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1.5">
       {/* HP: hanya placeholder (label tetap ada untuk pembaca layar). Desktop: label terlihat. */}
       <label htmlFor={id} className="sr-only text-[13px] font-semibold text-[#DDE6D4] lg:not-sr-only">
         {label}
       </label>
-      <input
-        id={id}
-        name={id}
-        type={type}
-        value={value}
-        autoComplete={autoComplete}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-11 w-full min-w-0 rounded-[10px] border-[1.5px] border-[rgba(230,201,127,.42)] bg-[rgba(247,241,227,.08)] px-3 text-[16px] text-[#F7F1E3] placeholder:text-[#B7C4B4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6C97F] lg:h-11 lg:text-[15px]"
-      />
+      <div className="relative">
+        <input
+          id={id}
+          name={id}
+          type={isPassword && shown ? "text" : type}
+          value={value}
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          className={`h-11 w-full min-w-0 rounded-[10px] border-[1.5px] border-[rgba(230,201,127,.42)] bg-[rgba(247,241,227,.08)] px-3 text-[16px] text-[#F7F1E3] placeholder:text-[#B7C4B4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6C97F] lg:h-11 lg:text-[15px] ${isPassword ? "pr-12" : ""}`}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShown((s) => !s)}
+            aria-label={shown ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+            aria-pressed={shown}
+            className="absolute right-0 top-0 grid h-11 w-11 place-items-center rounded-[10px] text-[#CFD8C8] hover:text-[#F7F1E3] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#E6C97F]"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              {shown ? (
+                <>
+                  <path d="M3 3l18 18" />
+                  <path d="M10.6 6.2A9.8 9.8 0 0 1 12 6c5 0 8.5 4 9.5 6a12.6 12.6 0 0 1-2.6 3.4M6.4 7.6A12.4 12.4 0 0 0 2.5 12c1 2 4.5 6 9.5 6a9.7 9.7 0 0 0 4-.9" />
+                  <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                </>
+              ) : (
+                <>
+                  <path d="M2.5 12C3.5 10 7 6 12 6s8.5 4 9.5 6c-1 2-4.5 6-9.5 6s-8.5-4-9.5-6z" />
+                  <circle cx="12" cy="12" r="3" />
+                </>
+              )}
+            </svg>
+          </button>
+        )}
+      </div>
     </div>
   );
 }
