@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Kendala from "@/components/rekam/Kendala";
 import Koreksi from "@/components/rekam/Koreksi";
 import { api, ApiError } from "@/lib/api";
@@ -57,6 +57,7 @@ export default function Rekam({
 }) {
   const { token } = useAuth();
   const sessionId = useRef<string | null>(null);
+  const box = useRef<HTMLDivElement>(null);
 
   const [scoring, setScoring] = useState(false);
   const [result, setResult] = useState<AttemptResult | null>(null);
@@ -124,6 +125,13 @@ export default function Rekam({
 
   const rec = useRecognizer(submit);
 
+  // Hasil baru muncul: di HP gulung otomatis supaya skor dan koreksi langsung kelihatan.
+  useEffect(() => {
+    if (round === 0) return;
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    box.current?.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
+  }, [round]);
+
   function begin() {
     setListenOnly(false);
     setResult(null);
@@ -136,7 +144,7 @@ export default function Rekam({
   const showIdle = !showTrouble && !listenOnly && !result && !rec.listening && !scoring;
 
   return (
-    <div className="flex flex-col" aria-label="Latihan bicara">
+    <div ref={box} className="flex scroll-mt-4 flex-col" aria-label="Latihan bicara">
       {showIdle && (
         <div className="flex flex-col items-center text-center">
           <p className="text-[11px] font-bold uppercase tracking-[.06em] text-muted">Giliranmu</p>

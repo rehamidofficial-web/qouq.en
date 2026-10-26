@@ -41,7 +41,7 @@ function MiniPlay({ playing, onClick, label }: { playing: boolean; onClick: () =
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#F1DD9C,#DC8A45)] text-[#0F2A22] shadow-[0_6px_14px_rgba(220,138,69,.28)] transition-transform active:scale-95"
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#F1DD9C,#DC8A45)] text-[#0F2A22] shadow-[0_6px_14px_rgba(220,138,69,.28)] transition-transform active:scale-95"
     >
       {playing ? (
         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
@@ -171,7 +171,7 @@ export default function KategoriPage() {
         <Link
           href="/latih"
           aria-label="Kembali ke kategori"
-          className="mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-card"
+          className="mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-card"
         >
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M19 12H5M11 6l-6 6 6 6" />
@@ -211,7 +211,7 @@ export default function KategoriPage() {
             }}
             placeholder="Cari kalimat atau artinya"
             aria-label="Cari kalimat"
-            className="field"
+            className="field text-[16px] md:text-[14px]"
           />
 
           <div className="flex flex-wrap gap-2" role="group" aria-label="Saring menurut level">

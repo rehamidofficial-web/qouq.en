@@ -29,7 +29,7 @@ export default function AuthField({
         autoComplete={autoComplete}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="h-[38px] w-full min-w-0 rounded-[10px] border-[1.5px] border-[rgba(230,201,127,.42)] bg-[rgba(247,241,227,.08)] px-3 text-[13px] text-[#F7F1E3] placeholder:text-[#B7C4B4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6C97F] lg:h-11 lg:text-[15px]"
+        className="h-11 w-full min-w-0 rounded-[10px] border-[1.5px] border-[rgba(230,201,127,.42)] bg-[rgba(247,241,227,.08)] px-3 text-[16px] text-[#F7F1E3] placeholder:text-[#B7C4B4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6C97F] lg:h-11 lg:text-[15px]"
       />
     </div>
   );

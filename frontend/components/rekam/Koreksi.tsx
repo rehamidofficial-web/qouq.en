@@ -116,7 +116,7 @@ export default function Koreksi({ result, heard, saved, onRetry, nextHref, backH
               aria-pressed={idx === i}
               aria-label={`${shown(w)}: ${STATUS_LABEL[w.status]}`}
               onClick={() => setPicked(i)}
-              className={`rounded-lg px-2.5 py-1 ${CHIP_COLOR[w.status]} ${idx === i ? "ring-2 ring-[var(--pri)] ring-offset-1 ring-offset-transparent" : ""}`}
+              className={`rounded-lg px-3 py-2 md:px-2.5 md:py-1 ${CHIP_COLOR[w.status]} ${idx === i ? "ring-2 ring-[var(--pri)] ring-offset-1 ring-offset-transparent" : ""}`}
             >
               {shown(w)}
             </button>
@@ -148,7 +148,7 @@ export default function Koreksi({ result, heard, saved, onRetry, nextHref, backH
                   type="button"
                   onClick={() => listen(onSel, 1)}
                   aria-label={playing && playingWord === `${onSel}@1` ? "Hentikan suara" : `Putar bunyi ${onSel}`}
-                  className="grid h-9 w-9 place-items-center rounded-full bg-[linear-gradient(135deg,#F1DD9C,#DC8A45)] text-[#0F2A22] shadow-[0_6px_14px_rgba(220,138,69,.28)] transition-transform active:scale-95"
+                  className="grid h-11 w-11 place-items-center rounded-full bg-[linear-gradient(135deg,#F1DD9C,#DC8A45)] text-[#0F2A22] shadow-[0_6px_14px_rgba(220,138,69,.28)] transition-transform active:scale-95"
                 >
                   <PlayIcon playing={playing && playingWord === `${onSel}@1`} />
                 </button>
@@ -156,7 +156,7 @@ export default function Koreksi({ result, heard, saved, onRetry, nextHref, backH
                   type="button"
                   onClick={() => listen(onSel, 0.6)}
                   aria-label={`Putar lambat ${onSel}`}
-                  className="grid h-9 w-9 place-items-center rounded-full border border-line bg-card text-[15px] active:scale-95"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-line bg-card text-[15px] active:scale-95"
                 >
                   {playing && playingWord === `${onSel}@0.6` ? "■" : "🐢"}
                 </button>

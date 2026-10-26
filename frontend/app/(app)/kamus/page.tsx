@@ -121,6 +121,8 @@ export default function KamusPage() {
   const openEntry = useCallback(async (id: string) => {
     const seq = ++detailSeq.current;
     setShowDetail(true);
+    // HP: daftar disembunyikan, jadi mulai dari atas supaya detail kata langsung kelihatan.
+    if (!window.matchMedia("(min-width: 1024px)").matches) window.scrollTo({ top: 0 });
     setDetailBusy(true);
     setDetailError(null);
     setEntry(null);
@@ -209,7 +211,7 @@ export default function KamusPage() {
                 autoComplete="off"
                 autoCapitalize="off"
                 spellCheck={false}
-                className="field pl-10"
+                className="field pl-10 text-[16px] md:text-[14px]"
               />
             </div>
 
@@ -328,7 +330,13 @@ export default function KamusPage() {
             </div>
           )}
 
-          {entry && <EntryDetail entry={entry} />}
+          {showDetail && (
+            <button type="button" className="chip mb-3 lg:hidden" onClick={() => setShowDetail(false)}>
+              ← Kembali ke hasil
+            </button>
+          )}
+
+          {entry && showDetail && <EntryDetail entry={entry} />}
         </div>
       </div>
     </div>
@@ -414,8 +422,8 @@ function EntryDetail({ entry }: { entry: Entry }) {
           <button type="button" aria-pressed={saved} className={`chip ${saved ? "chip-on" : ""}`} onClick={() => toggleSaved(entry.headword)}>
             {saved ? "✓ Tersimpan" : "☆ Simpan"}
           </button>
-          {syn.length > 0 && <span className="chip">Sinonim: {syn.slice(0, 4).join(", ")}</span>}
-          {ant.length > 0 && <span className="chip">Antonim: {ant.slice(0, 4).join(", ")}</span>}
+          {syn.length > 0 && <span className="chip !h-auto py-1.5">Sinonim: {syn.slice(0, 4).join(", ")}</span>}
+          {ant.length > 0 && <span className="chip !h-auto py-1.5">Antonim: {ant.slice(0, 4).join(", ")}</span>}
       </div>
     </article>
   );

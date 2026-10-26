@@ -77,7 +77,7 @@ export default function LatihPage() {
         onChange={(e) => setQ(e.target.value)}
         placeholder="Cari kategori"
         aria-label="Cari kategori"
-        className="field max-w-md"
+        className="field max-w-md text-[16px] md:text-[14px]"
       />
 
       {error && (
