@@ -130,7 +130,7 @@ function EditProfil() {
 
       <label className="flex flex-col gap-1.5">
         <span className="text-[11px] font-bold uppercase tracking-[.08em] text-muted">Nama</span>
-        <input className="field text-[16px] md:text-[14px]" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+        <input className="field" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} autoComplete="name" />
       </label>
       <label className="flex flex-col gap-1.5">
         <span className="text-[11px] font-bold uppercase tracking-[.08em] text-muted">Email</span>
@@ -287,6 +287,10 @@ export default function ProfilPage() {
           Keluar dari akun
         </button>
       </Section>
+
+      <Link href="/tentang" className="text-center text-muted underline underline-offset-2">
+        Tentang Qouq.en dan sumber data
+      </Link>
     </div>
   );
 }
